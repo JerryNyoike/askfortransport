@@ -4,3 +4,12 @@ CREATE TABLE user(
     username VARCHAR(100) UNIQUE NOT NULL,
     PRIMARY KEY(id)
 );
+
+CREATE TABLE transporter(
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    email VARCHAR(100) NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    dl_number VARCHAR(20) UNIQUE NOT NULL,
+    full_name VARCHAR(20) NOT NULL,
+    phone INT(20) NOT NULL
+)
