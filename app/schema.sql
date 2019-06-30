@@ -2,6 +2,7 @@ CREATE TABLE user(
     id INT(11) NOT NULL AUTO_INCREMENT,
     email VARCHAR(100) NOT NULL,
     username VARCHAR(100) UNIQUE NOT NULL,
+    phone INT(20) NOT NULL,
     PRIMARY KEY(id)
 );
 
