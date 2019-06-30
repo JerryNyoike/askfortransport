@@ -13,4 +13,17 @@ CREATE TABLE transporter(
     dl_number VARCHAR(20) UNIQUE NOT NULL,
     full_name VARCHAR(20) NOT NULL,
     phone INT(20) NOT NULL
-)
+);
+
+CREATE TABLE vehicle(
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    capacity INT(11) NOT NULL,
+    price INT(11) NOT NULL,
+    number_plate INT(11) NOT NULL,
+    pictures TEXT NOT NULL,
+    transporter_id INT(11) NOT NULL,
+
+    PRIMARY KEY(id),
+    FOREIGN KEY(transporter_id) REFERENCES transporter(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
