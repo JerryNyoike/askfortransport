@@ -30,8 +30,4 @@ CREATE TABLE vehicle(
     PRIMARY KEY(id),
     FOREIGN KEY(transporter_id) REFERENCES transporter(id)
         ON UPDATE CASCADE ON DELETE CASCADE
-<<<<<<< HEAD
 );
-=======
-);
->>>>>>> Add sql to create vehicle table and create relationship between vehicle table and transporter table
