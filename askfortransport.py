@@ -100,10 +100,14 @@ def do_driver_login():
 
 
 
-@app.route('/images/vehicle/upload', methods=['POST'])
-def upload_image():
+@app.route('/images/vehicle/upload<vehicle_id>', methods=['POST'])
+def upload_image(vehicle_id):
         #get token and check token validity
         token = request.headers['Authorization'].split(" ")[1]
+        if vehicle_id is None:
+                response = make_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
+                return response
+        
         #if verify_token(token) and request.headers['Content-Type'] == 'multipart/form-data':
         if not request.files:
                 response = make_response(jsonify({"message": "no files uploaded"}), 400)
@@ -117,7 +121,7 @@ def upload_image():
         elif img and allowed_file(img.filename):
                 driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
                 filename = secure_filename(img.filename)
-                path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), filename)
+                path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), str(vehicle_id), filename)
                 if not os.path.exists(os.path.dirname(path)):
                         os.makedirs(os.path.dirname(path))
 
