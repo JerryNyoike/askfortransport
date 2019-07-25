@@ -100,7 +100,7 @@ def do_driver_login():
 
 
 
-@app.route('/images/vehicle/upload<vehicle_id>', methods=['POST'])
+@app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
 def upload_image(vehicle_id):
         #get token and check token validity
         token = request.headers['Authorization'].split(" ")[1]
@@ -121,7 +121,7 @@ def upload_image(vehicle_id):
                 elif img and allowed_file(img.filename):
                         driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
                         filename = secure_filename(img.filename)
-                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), str(vehicle_id), filename)
+                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id), filename)
                         if not os.path.exists(os.path.dirname(path)):
                                 os.makedirs(os.path.dirname(path))
 
@@ -135,3 +135,20 @@ def upload_image(vehicle_id):
                         
                 response = make_response(jsonify({"message":"Bad request"}, 400))
                 return response
+
+
+@app.route('/images/vehicle/<vehicle_id>')
+def fetch_images(vehicle_id):
+        if vehicle_id is None:
+                return None
+        
+        #check that dir exists
+        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id))
+        
+        #fetch all file names
+        imgs = [i for i in os.listdir() if os.path.isfile(os.path.join(path, i))]
+        
+        if os.path.exists(path) and imgs is not None:
+                return imgs
+
+        return None
