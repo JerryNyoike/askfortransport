@@ -108,30 +108,30 @@ def upload_image(vehicle_id):
                 response = make_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
                 return response
         
-        #if verify_token(token) and request.headers['Content-Type'] == 'multipart/form-data':
-        if not request.files:
-                response = make_response(jsonify({"message": "no files uploaded"}), 400)
-                return response
-        
-        img = request.files['file']
-        if img.filename == '':
-                response = make_response(jsonify({"message": "no uploaded"}), 400)
-                return response
-
-        elif img and allowed_file(img.filename):
-                driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
-                filename = secure_filename(img.filename)
-                path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), str(vehicle_id), filename)
-                if not os.path.exists(os.path.dirname(path)):
-                        os.makedirs(os.path.dirname(path))
-
-                img.save(path)
-                # save the file path to the database
-                with connection.cursor() as cur:
-                        cur.execute("UPDATE vehicle SET pictures = %s WHERE transporter_id = %s", (path, driver_id))
-                        connection.commit()
+        elif verify_token(token) is True:
+                if not request.files:
+                        response = make_response(jsonify({"message": "no files uploaded"}), 400)
+                        return response
                 
-                return jsonify({"message":"Successfully uploaded image"})
-                
-        response = make_response(jsonify({"message":"Bad request"}, 400))
-        return response
+                img = request.files['file']
+                if img.filename == '':
+                        response = make_response(jsonify({"message": "no uploaded"}), 400)
+                        return response
+
+                elif img and allowed_file(img.filename):
+                        driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
+                        filename = secure_filename(img.filename)
+                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), str(vehicle_id), filename)
+                        if not os.path.exists(os.path.dirname(path)):
+                                os.makedirs(os.path.dirname(path))
+
+                        img.save(path)
+                        # save the file path to the database
+                        with connection.cursor() as cur:
+                                cur.execute("UPDATE vehicle SET pictures = %s WHERE transporter_id = %s", (path, driver_id))
+                                connection.commit()
+                        
+                        return jsonify({"message":"Successfully uploaded image"})
+                        
+                response = make_response(jsonify({"message":"Bad request"}, 400))
+                return response
