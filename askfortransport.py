@@ -183,7 +183,7 @@ def upload_image(vehicle_id):
                 elif img and allowed_file(img.filename):
                         driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
                         filename = secure_filename(img.filename)
-                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(driver_id), str(vehicle_id), filename)
+                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id), filename)
                         if not os.path.exists(os.path.dirname(path)):
                                 os.makedirs(os.path.dirname(path))
 
