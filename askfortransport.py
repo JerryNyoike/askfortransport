@@ -21,7 +21,7 @@ connection = pymysql.connect(host='localhost',
 
 app = Flask(__name__)
 app.config.from_mapping(
-        IMAGE_STORE_PATH='/home/nyoike/Documents/images/'
+        IMAGE_STORE_PATH='./static/'
 )
 
 
@@ -149,6 +149,6 @@ def fetch_images(vehicle_id):
         imgs = [i for i in os.listdir() if os.path.isfile(os.path.join(path, i))]
         
         if os.path.exists(path) and imgs is not None:
-                return imgs
+                return {"images": list(imgs)}
 
         return None
