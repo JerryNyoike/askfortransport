@@ -152,15 +152,7 @@ def register_user(user_details, user_type):
                 return {'success': 0, 'message': 'Email already exists'}, 409
         elif user_details["username"] == result["username"]:
                 return {'success': 0, 'message': 'Username already exists'}, 409
-        
-        
-def fetch_user(username, password, user_type):
-        if user_type is 'client':
-                cur.execute("SELECT * FROM user WHERE username = '{}' AND pwd = '{}' LIMIT 1".format(username, password))
-        elif user_type is 'transporter':
-                cur.execute("SELECT * FROM transporter WHERE username = '{}' AND pwd = '{}' LIMIT 1".format(username, password))
 
-        return cur.fetchone()
 
 @app.route('/images/vehicle/upload<vehicle_id>', methods=['POST'])
 def upload_image(vehicle_id):
