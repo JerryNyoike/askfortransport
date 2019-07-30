@@ -131,7 +131,7 @@ def upload_image(vehicle_id):
                                 cur.execute("UPDATE vehicle SET pictures = %s WHERE transporter_id = %s", (path, driver_id))
                                 connection.commit()
                         
-                        return jsonify({"message":"Successfully uploaded image"})
+                        return jsonify({"message":"Successfully uploaded image", "img": path})
                         
                 response = make_response(jsonify({"message":"Bad request"}, 400))
                 return response
