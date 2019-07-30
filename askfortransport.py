@@ -129,12 +129,12 @@ def get_vehicles(search_params=None):
 def register_vehicle():
         body = request.get_json(force=True)
 
-        token_payload = decode_token(body["token"])
-        if not token_payload:
+        token = request.headers['Authorization'].split(" ")[1]
+        if not token:
                 return make_cross_response(jsonify({"success": 0, "message": "Driver don't exist"}), 404)
 
         insert_query = "INSERT INTO vehicle (type, capacity, price, number_plate, pictures, transporter_id) VALUES "
-        insert_query += "('{}', '{}', '{}', '{}', 'no image', {}, 'available')".format(body["type"], body["capacity"], body["price"], body["number_plate"], token_payload["sub"])
+        insert_query += "('{}', '{}', '{}', '{}', 'no image', {}, 'available')".format(body["type"], body["capacity"], body["price"], body["number_plate"], token["sub"])
         cur.execute(insert_query)
         connection.commit()
         if cur.rowcount > 0:     
