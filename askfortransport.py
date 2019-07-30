@@ -21,7 +21,7 @@ connection = pymysql.connect(host='localhost',
 
 app = Flask(__name__)
 app.config.from_mapping(
-        IMAGE_STORE_PATH='./static/'
+        IMAGE_STORE_PATH='./static/images'
 )
 
 
