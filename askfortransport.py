@@ -135,20 +135,3 @@ def upload_image(vehicle_id):
                         
                 response = make_response(jsonify({"message":"Bad request"}, 400))
                 return response
-
-
-@app.route('/images/vehicle/<vehicle_id>')
-def fetch_images(vehicle_id):
-        if vehicle_id is None:
-                return None
-        
-        #check that dir exists
-        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id))
-        
-        #fetch all file names
-        imgs = [i for i in os.listdir() if os.path.isfile(os.path.join(path, i))]
-        
-        if os.path.exists(path) and imgs is not None:
-                return {"images": list(imgs)}
-
-        return None
