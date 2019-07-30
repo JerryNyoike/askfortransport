@@ -143,6 +143,40 @@ def register_vehicle():
                 response = jsonify({"success": 1, "vehicle_id": cur.fetchone()["id"]})
                 return make_cross_response(response, 200)
 
+@app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
+def upload_image(vehicle_id):
+        #get token and check token validity
+        token = request.headers['Authorization'].split(" ")[1]
+        if vehicle_id is None:
+                response = make_cross_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
+                return response
+        
+        elif verify_token(token) is True:
+                if not request.files:
+                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        return response
+                
+                img = request.files['file']
+                if img.filename == '':
+                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        return response
+
+                elif img and allowed_file(img.filename):
+                        driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
+                        filename = secure_filename(img.filename)
+                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id), filename)
+                        if not os.path.exists(os.path.dirname(path)):
+                                os.makedirs(os.path.dirname(path))
+
+                        img.save(path)
+                        # save the file path to the database
+                        with connection.cursor() as cur:
+                                cur.execute("UPDATE vehicle SET pictures = %s WHERE vehicle_id = %s", (path, vehicle_id))
+                                connection.commit()
+                        return jsonify({"message":"Successfully uploaded image"})
+                        
+                response = make_cross_response(jsonify({"message":"Bad request"}, 400))
+                return response
 
 def register_user(user_details, user_type):                
         #check if the user already exists
