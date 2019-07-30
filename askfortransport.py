@@ -10,7 +10,9 @@ app = Flask(__name__)
 
 # create a secret for signing jwt's, this should later on be set in
 # the environment variables for security purposes
-secret = sha256_crypt.using(rounds=5000).hash('secreto')
+secret = "$5$3Y/MPbv8Qi2nDv5M$z9rn56J9EDnw.bOtCpJSelh76uzkUsUHaDnHZ73D9g."
+
+ALLOWED_EXTENSIONS = ['jpeg', 'png', 'jpg']
 
 # connect to mysql db
 connection = pymysql.connect(host='localhost',
@@ -89,11 +91,11 @@ def get_vehicles(search_params=None):
         else:
                 return make_cross_response(jsonify({'success': 1, 'vehicles': result}), 200)
 
-@app.route("/register_vehicle/", methods=['POST'])
+@app.route("/register_vehicle", methods=['POST'])
 def register_vehicle():
         body = request.get_json(force=True)
 
-        token_payload = decode_token(body["token"])
+        token_payload = request.headers['Authorization'].split(" ")[1]
         if not token_payload:
                 return make_cross_response(jsonify({"success": 0, "message": "Driver don't exist"}), 404)
 
@@ -107,6 +109,40 @@ def register_vehicle():
                 response = jsonify({"success": 1, "vehicle_id": cur.fetchone()["id"]})
                 return make_cross_response(response, 200)
 
+@app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
+def upload_image(vehicle_id):
+        #get token and check token validity
+        token = request.headers['Authorization'].split(" ")[1]
+        if vehicle_id is None:
+                response = make_cross_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
+                return response
+        
+        elif verify_token(token) is True:
+                if not request.files:
+                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        return response
+                
+                img = request.files['file']
+                if img.filename == '':
+                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        return response
+
+                elif img and allowed_file(img.filename):
+                        driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
+                        filename = secure_filename(img.filename)
+                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id), filename)
+                        if not os.path.exists(os.path.dirname(path)):
+                                os.makedirs(os.path.dirname(path))
+
+                        img.save(path)
+                        # save the file path to the database
+                        with connection.cursor() as cur:
+                                cur.execute("UPDATE vehicle SET pictures = %s WHERE vehicle_id = %s", (path, vehicle_id))
+                                connection.commit()
+                        return jsonify({"message":"Successfully uploaded image"})
+                        
+                response = make_cross_response(jsonify({"message":"Bad request"}, 400))
+                return response
 
 def register_user(user_details, user_type):                
         #check if the user already exists
@@ -152,15 +188,15 @@ def decode_token(token):
         return payload
 
 def verify_token(token):
-        ''' whenever a user sends a request accompanied by the jwt 
-            we must check its validity'''
-        payload = decode(token, secret, algorithm='HS256')
-        if get_unverified_header(token)['alg'] is 'HS256':
+        ''' whenever a user sends a request accompanied by the jwt
+            this function checks its validity by looking at the algorithm used and the expiry time of the token'''
+        try:
+                jwt.decode(token, secret, algorithms=['HS256'])
                 return True
-        elif datetime.now().month - payload['exp'].month >= 1:
+        except jwt.ExpiredSignatureError:
                 return False
-        else:
-                return True
+        except jwt.InvalidAlgorithmError:
+                return False
 
 def make_cross_response(data, code):
         response = make_response(data, code)
