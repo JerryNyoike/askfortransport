@@ -24,8 +24,9 @@ CREATE TABLE vehicle(
     capacity INT(11) NOT NULL,
     price INT(11) NOT NULL,
     number_plate INT(11) NOT NULL,
-    pictures TEXT NOT NULL,
+    pictures VARCHAR(100) NOT NULL DEFAULT 'No images',
     transporter_id INT(11) NOT NULL,
+    booked VARCHAR(10) NOT NULL DEFAULT 'no',
 
     PRIMARY KEY(id),
     FOREIGN KEY(transporter_id) REFERENCES transporter(id)
