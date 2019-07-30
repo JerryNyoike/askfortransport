@@ -22,7 +22,7 @@ cur = connection.cursor()
 
 app = Flask(__name__)
 app.config.from_mapping(
-        IMAGE_STORE_PATH='/home/nyoike/Documents/images/'
+        IMAGE_STORE_PATH='./static/images'
 )
 
 
@@ -154,7 +154,7 @@ def register_user(user_details, user_type):
                 return {'success': 0, 'message': 'Username already exists'}, 409
 
 
-@app.route('/images/vehicle/upload<vehicle_id>', methods=['POST'])
+@app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
 def upload_image(vehicle_id):
         #get token and check token validity
         token = request.headers['Authorization'].split(" ")[1]
@@ -185,7 +185,7 @@ def upload_image(vehicle_id):
                                 cur.execute("UPDATE vehicle SET pictures = %s WHERE transporter_id = %s", (path, driver_id))
                                 connection.commit()
                         
-                        return jsonify({"message":"Successfully uploaded image"})
+                        return jsonify({"message":"Successfully uploaded image", "img": path})
                         
                 response = make_response(jsonify({"message":"Bad request"}, 400))
                 return response
