@@ -80,7 +80,7 @@ def do_client_login():
                 return jsonify({'message': 'User not found'})
 
         elif user_info['pwd'] == request_data['pass'] and user_info['username'] == request_data['username']:
-                token = jwt.encode({'sub': user_info['id'], 'exp': datetime.utcnow()+timedelta(
+                token = jwt.encode({'typ': 'client', 'sub': user_info['id'], 'exp': datetime.utcnow()+timedelta(
                         days=10)}, secret, algorithm='HS256').decode('utf-8')
                 return jsonify({'message': 'Successful login', 'token': '{}'.format(token)})
 
@@ -97,7 +97,7 @@ def do_driver_login():
                 return jsonify({'message': 'User not found'})
 
         elif user_info['pwd'] == request_data['pass'] and user_info['username'] == request_data['username']:
-                token = jwt.encode({'sub': user_info['id'], 'exp': datetime.now()+timedelta(
+                token = jwt.encode({'typ': 'driver', 'sub': user_info['id'], 'exp': datetime.now()+timedelta(
                         days=10)}, secret, algorithm='HS256').decode('utf-8')
                 return jsonify({'message': 'Successful login', 'token': '{}'.format(token)})
 
