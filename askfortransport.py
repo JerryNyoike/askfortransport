@@ -205,44 +205,7 @@ def register_user(user_details, user_type):
                 return {'success': 0, 'message': 'Email already exists'}, 409
         elif user_details["username"] == result["username"]:
                 return {'success': 0, 'message': 'Username already exists'}, 409
-
-
-@app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
-def upload_image(vehicle_id):
-        #get token and check token validity
-        token = request.headers['Authorization'].split(" ")[1]
-        if vehicle_id is None:
-                response = make_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
-                return response
-        
-        elif verify_token(token) is True:
-                if not request.files:
-                        response = make_response(jsonify({"message": "no files uploaded"}), 400)
-                        return response
                 
-                img = request.files['file']
-                if img.filename == '':
-                        response = make_response(jsonify({"message": "no uploaded"}), 400)
-                        return response
-
-                elif img and allowed_file(img.filename):
-                        driver_id = jwt.decode(token, secret, algorithms=['HS256'])['sub']
-                        filename = secure_filename(img.filename)
-                        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(vehicle_id), filename)
-                        if not os.path.exists(os.path.dirname(path)):
-                                os.makedirs(os.path.dirname(path))
-
-                        img.save(path)
-                        # save the file path to the database
-                        with connection.cursor() as cur:
-                                cur.execute("UPDATE vehicle SET pictures = %s WHERE transporter_id = %s", (path, driver_id))
-                                connection.commit()
-                        
-                        return jsonify({"message":"Successfully uploaded image", "img": path})
-                        
-                response = make_response(jsonify({"message":"Bad request"}, 400))
-                return response
-
 
 @app.route('/vehicle/book/<v_id>', methods=['POST'])
 def book_vehicle(v_id):
