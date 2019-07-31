@@ -242,6 +242,37 @@ def upload_image(vehicle_id):
                         
                 response = make_response(jsonify({"message":"Bad request"}, 400))
                 return response
+
+
+@app.route('/vehicle/book/<v_id>', methods=['POST'])
+def book_vehicle(v_id):
+        token = request.headers['Authorization'].split(" ")[1]
+        if token['sub'] is None:
+                return make_cross_response(jsonify({"message": "You must be logged in to book a vehicle."}), 403)
+        elif token['typ'] != 'client':
+                return make_cross_response(jsonify({"message": "You must have logged in with a client account to book a vehicle."}))
+
+        # get vehicle id from the json body
+        body = request.get_json(force=True)
+        if v_id is None:
+                return make_cross_response(jsonify({"message": "Specify vehicle to book"}), 400)
+
+        # check that vehicle exists
+        with connection.cursor as cur:
+                cur.execute("SELECT * FROM vehicle WHERE id = {}".format(v_id))
+                connection.commit()
+
+                vehicle = cur.fetchone()
+                if vehicle['booked'] != 'no':
+                        return make_cross_response(jsonify({"message": "The vehicle is not available for booking"}), 404)
+
+                cur.execute("UPDATE vehicle SET booked = %s WHERE id = %s", (token['sub'], v_id))
+                connection.commit()
+
+                if cur.rowcount < 0:
+                        return make_cross_response(jsonify({"message": "Booking Unsuccessful"}), 500)
+
+                return make_cross_response(jsonify({"message": "Successfully booked vehicle"}), 200)
         
 def fetch_user(username, password, user_type):
         if user_type == 'client':
@@ -255,3 +286,4 @@ def make_cross_response(data, code):
         response = make_response(data, code)
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
+
