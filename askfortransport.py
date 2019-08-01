@@ -4,6 +4,7 @@ import pymysql.cursors
 from datetime import datetime, timedelta
 import jwt
 import os
+from flask_cors import CORS
 
 # create a secret for signing jwt's, this should later on be set in
 # the environment variables for security purposes
@@ -22,8 +23,9 @@ cur = connection.cursor()
 
 app = Flask(__name__)
 app.config.from_mapping(
-        IMAGE_STORE_PATH='./static/images'
+        IMAGE_STORE_PATH='./static'
 )
+flask_cors.CORS(app)
 
 
 def fetch_user(username, password, user_type):
@@ -46,7 +48,7 @@ def do_registration(user_type):
         '''Get the users's information from POST data and inserts into the database'''
         request_data = request.get_json(force=True)
         result, status = register_user(request_data, user_type)
-        return make_cross_response(jsonify(result), status)
+        return make_response(jsonify(result), status)
                 
 
 def allowed_file(filename):
@@ -85,7 +87,7 @@ def do_client_login():
                 return jsonify({'message': 'Successful login', 'token': '{}'.format(token)})
 
         else:
-                return make_cross_response(jsonify({'message': 'User not found'}), 404)
+                return make_response(jsonify({'message': 'User not found'}), 404)
 
 @app.route('/auth/login/driver', methods=['POST'])
 def do_driver_login():
@@ -93,14 +95,14 @@ def do_driver_login():
         user_info = fetch_user(request_data['username'], request_data['pass'], 'transporter')
 
         if not user_info:
-                return make_cross_response(jsonify({'message': 'User not found'}), 404)
+                return make_response(jsonify({'message': 'User not found'}), 404)
         elif user_info['pwd'] == request_data['pass'] and user_info['username'] == request_data['username']:
                 token = jwt.encode({'typ': 'driver', 'sub': user_info['id'], 'exp': datetime.now()+timedelta(
                         days=10)}, secret, algorithm='HS256').decode('utf-8')
                 return jsonify({'message': 'Successful login', 'token': '{}'.format(token)})
 
         else:
-                return make_cross_response(jsonify({'message': 'User not found'}), 404)
+                return make_response(jsonify({'message': 'User not found'}), 404)
 
 @app.route("/vehicles", methods=['POST'])
 @app.route("/vehicles/<search_params>", methods=['POST'])
@@ -120,9 +122,9 @@ def get_vehicles(search_params=None):
         cur.execute(fetch_query) 
         result = cur.fetchall()
         if not result:
-                return make_cross_response(jsonify({'success': 0, 'message': 'No vehicles found'}), 404)
+                return make_response(jsonify({'success': 0, 'message': 'No vehicles found'}), 404)
         else:
-                return make_cross_response(jsonify({'success': 1, 'vehicles': result}), 200)
+                return make_response(jsonify({'success': 1, 'vehicles': result}), 200)
 
 @app.route("/register_vehicle/", methods=['POST'])
 def register_vehicle():
@@ -130,7 +132,7 @@ def register_vehicle():
 
         token = request.headers['Authorization'].split(" ")[1]
         if not token:
-                return make_cross_response(jsonify({"success": 0, "message": "Driver don't exist"}), 404)
+                return make_response(jsonify({"success": 0, "message": "Driver don't exist"}), 404)
 
         insert_query = "INSERT INTO vehicle (type, capacity, price, number_plate, pictures, transporter_id) VALUES "
         insert_query += "('{}', '{}', '{}', '{}', 'no image', {}, 'available')".format(body["type"], body["capacity"], body["price"], body["number_plate"], token["sub"])
@@ -140,24 +142,24 @@ def register_vehicle():
                 fetch_query = "SELECT id FROM vehicle WHERE number_plate = '%s'" % body["number_plate"]
                 cur.execute(fetch_query)
                 response = jsonify({"success": 1, "vehicle_id": cur.fetchone()["id"]})
-                return make_cross_response(response, 200)
+                return make_response(response, 200)
 
 @app.route('/images/vehicle/upload/<vehicle_id>', methods=['POST'])
 def upload_image(vehicle_id):
         #get token and check token validity
-        token = request.headers['Authorization'].split(" ")[1]
+        token =  request.headers['Authorization'].split(" ")[1]
         if vehicle_id is None:
-                response = make_cross_response(jsonify({"message": "You must specify the vehicle id to post a  picture of it."}), 400)
+                response = make_response(jsonify({"success": 0, "message": "You must specify the vehicle id to post a  picture of it."}), 400)
                 return response
         
         elif verify_token(token) is True:
                 if not request.files:
-                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        response = make_response(jsonify({"success": 0, "message": "no files uploaded"}), 400)
                         return response
                 
                 img = request.files['file']
                 if img.filename == '':
-                        response = make_cross_response(jsonify({"message": "no files uploaded"}), 400)
+                        response = make_response(jsonify({"success": 0, "message": "no files uploaded"}), 400)
                         return response
 
                 elif img and allowed_file(img.filename):
@@ -172,9 +174,9 @@ def upload_image(vehicle_id):
                         with connection.cursor() as cur:
                                 cur.execute("UPDATE vehicle SET pictures = %s WHERE vehicle_id = %s", (path, vehicle_id))
                                 connection.commit()
-                        return jsonify({"message":"Successfully uploaded image"})
+                        return jsonify({"success": 1, "message":"Successfully uploaded image"}, 200)
                         
-                response = make_cross_response(jsonify({"message":"Bad request"}, 400))
+                response = make_response(jsonify({"success": 0, "message":"Bad request"}, 400))
                 return response
 
 def register_user(user_details, user_type):                
@@ -209,33 +211,32 @@ def register_user(user_details, user_type):
 
 @app.route('/vehicle/book/<v_id>', methods=['POST'])
 def book_vehicle(v_id):
-        token = request.headers['Authorization'].split(" ")[1]
+        v_id = int(v_id)
+        token = decoded_token(request.headers['Authorization'].split(" ")[1])
         if token['sub'] is None:
-                return make_cross_response(jsonify({"message": "You must be logged in to book a vehicle."}), 403)
+                return make_response(jsonify({"success": 0, "message": "You must be logged in to book a vehicle."}), 403)
         elif token['typ'] != 'client':
-                return make_cross_response(jsonify({"message": "You must have logged in with a client account to book a vehicle."}))
+                return make_response(jsonify({"success": 0, "message": "You must have logged in with a client account to book a vehicle."}))
 
         # get vehicle id from the json body
-        body = request.get_json(force=True)
         if v_id is None:
-                return make_cross_response(jsonify({"message": "Specify vehicle to book"}), 400)
+                return make_response(jsonify({"success": 0, "message": "Specify vehicle to book"}), 400)
 
         # check that vehicle exists
-        with connection.cursor as cur:
-                cur.execute("SELECT * FROM vehicle WHERE id = {}".format(v_id))
-                connection.commit()
+        cur.execute("SELECT * FROM vehicle WHERE id = {}".format(v_id))
+        connection.commit()
 
-                vehicle = cur.fetchone()
-                if vehicle['booked'] != 'no':
-                        return make_cross_response(jsonify({"message": "The vehicle is not available for booking"}), 404)
+        vehicle = cur.fetchone()
+        if vehicle['booked'] != 'no':
+                return make_response(jsonify({"success": 0, "message": "The vehicle is not available for booking"}), 404)
 
-                cur.execute("UPDATE vehicle SET booked = %s WHERE id = %s", (token['sub'], v_id))
-                connection.commit()
+        cur.execute("UPDATE vehicle SET booked = %s WHERE id = %s", (token['sub'], v_id))
+        connection.commit()
 
-                if cur.rowcount < 0:
-                        return make_cross_response(jsonify({"message": "Booking Unsuccessful"}), 500)
+        if cur.rowcount < 0:
+                return make_response(jsonify({"success": 0, "message": "Booking Unsuccessful"}), 500)
 
-                return make_cross_response(jsonify({"message": "Successfully booked vehicle"}), 200)
+        return make_response(jsonify({"success": 1, "message": "Successfully booked vehicle"}), 200)
         
 def fetch_user(username, password, user_type):
         if user_type == 'client':
@@ -243,10 +244,4 @@ def fetch_user(username, password, user_type):
         elif user_type == 'transporter':
                 cur.execute("SELECT * FROM transporter WHERE username = '{}' AND pwd = '{}' LIMIT 1".format(username, password))    
         return cur.fetchone()
-
-
-def make_cross_response(data, code):
-        response = make_response(data, code)
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
 
