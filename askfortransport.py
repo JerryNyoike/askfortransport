@@ -133,7 +133,6 @@ def get_vehicles(search_params=None):
                                 fetch_query += key_value[0] + "=" + key_value[1] + " AND "
                         else:
                                 fetch_query += key_value[0] + "=" + key_value[1]
-        print("\n\n" + fetch_query + "\n\n")
         cur.execute(fetch_query) 
         result = cur.fetchall()
         if not result:
