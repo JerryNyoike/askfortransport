@@ -20,8 +20,13 @@ We also have a lot of vehicle owners offering transportation services. Although 
 
 3) Set up a [virtual environment](https://docs.python.org/3/tutorial/venv.html) in the root folder of the project using the command `python3 -m venv .` while inside the project folder
 4) Install project dependencies using [pip](https://pip.pypa.io/en/stable/installing/) by executing the command `pip3 install -r requirements.txt` when inside the root directory.
+> List of project dependencies
+- [Flask](https://flask.palletsprojects.com/en/1.1.x/)
+- [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/)
+- [PyJWT](https://pyjwt.readthedocs.io/en/latest/)
+- [PyMySQL](https://pymysql.readthedocs.io/en/latest/)
 5) Create a database instance using the command `mysql source app/schema.sql` from the project's root directory.
-6) Run the [Flask](https://flask.palletsprojects.com/en/1.1.x/) server with the commands 
+6) Run the Flask server with the commands 
     ```
     $export FLASK_ENV=development
     $export FLASK_APP=lig.py
