@@ -44,17 +44,17 @@ def register_user(db_conn, user_details, user_type):
             return {'success': 0, 'message': 'Username already exists'},
             409
 
-def fetch_user(username, password, user_type):
+def fetch_user(db_conn, username, password, user_type):
     user = None
-    with connection.cursor() as cur:
+    with db_conn.cursor() as cur:
         if user_type is 'client':
             cur.execute("SELECT * FROM user WHERE username = '{}' AND pwd = '{}' LIMIT 1".format(username, password))
-            connection.commit()
+            db_conn.commit()
             user = cur.fetchone()
 
         elif user_type is 'transporter':
             cur.execute("SELECT * FROM transporter WHERE username = '{}' AND pwd = '{}' LIMIT 1".format(username, password))
-            connection.commit()
+            db_conn.commit()
             user = cur.fetchone()
     return user         
 
@@ -99,10 +99,10 @@ def do_client_login():
 
 @bp.route('/login/driver', methods=['POST'])
 def do_driver_login():
-    db = get_db()
+    db_conn = get_db()
     request_data = request.get_json(force=True)
     user_info = fetch_user(
-        db, request_data['username'], request_data['pass'], 'transporter'
+        db_conn, request_data['username'], request_data['pass'], 'transporter'
         )
 
     if not user_info:
