@@ -27,4 +27,6 @@ def create_app(test_config=None):
     except (OSError):
         pass
 
+    db.init_app(app)
+
     return app
