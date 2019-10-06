@@ -2,7 +2,8 @@ import os
 import pymysql.cursors
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
-from . import db
+from . import db, auth
+
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -28,5 +29,6 @@ def create_app(test_config=None):
         pass
 
     db.init_app(app)
+    app.register_blueprint(auth.bp)
 
     return app
