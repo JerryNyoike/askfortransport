@@ -87,14 +87,14 @@ def do_client_login():
     db = get_db()
     request_data = request.get_json(force=True)
     user_info = fetch_user(
-        db, request_data['username'], request_data['pass'], 'client'
+        db, request_data['username'], request_data['pwd'], 'client'
         )
 
     if user_info is None:
         return make_response(
             jsonify({'success': 0, 'message': 'User not found'}), 404)
 
-    elif user_info['pwd'] == request_data['pass'] and user_info['username'] == request_data['username']:
+    elif user_info['pwd'] == request_data['pwd'] and user_info['username'] == request_data['username']:
         token = jwt.encode(
             {'typ': 'client',
              'sub': user_info['id'],
@@ -113,7 +113,7 @@ def do_driver_login():
     db_conn = get_db()
     request_data = request.get_json(force=True)
     user_info = fetch_user(
-        db_conn, request_data['username'], request_data['pass'], 'transporter'
+        db_conn, request_data['username'], request_data['pwd'], 'transporter'
         )
 
     if not user_info:
