@@ -12,7 +12,7 @@ def get_db():
                              db=current_app.config['DB'],
                              cursorclass=current_app.config['CURSOR'])
     
-    return g.db.cursor()
+    return g.db
 
 def close_db(e=None):
     db = g.pop('db', None)
