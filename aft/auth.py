@@ -4,6 +4,17 @@ from flask import Blueprint, make_response, request, jsonify
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+def verify_token(token):
+        ''' whenever a user sends a request accompanied by the jwt
+            this function checks its validity by looking at the algorithm used and the expiry time of the token'''
+        try:
+                return jwt.decode(token, secret, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+                return False
+        except jwt.InvalidAlgorithmError:
+                return False
+
+
 def register_user(db_conn, user_details, user_type):
         # check if the user already exists
         cur = db_conn.cursor()
