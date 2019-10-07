@@ -1,12 +1,12 @@
 from aft.db import get_db
-from flask import Blueprint, make_response, request, jsonify
+from flask import Blueprint, make_response, request, jsonify, current_app
 import jwt
 from datetime import datetime, timedelta
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-def verify_token(token):
+def verify_token(token, secret):
         ''' whenever a user sends a request accompanied by the jwt
             this function checks its validity by looking at the algorithm used and the expiry time of the token'''
         try:
@@ -84,7 +84,7 @@ def do_registration(user_type):
 
 @bp.route('/login/client', methods=['POST'])
 def do_client_login():
-    '''This function checks POSTed data against wht is in the database and
+    '''This function checks POSTed data against what is in the database and
      returns a jwt to authorize users to use the site'''
     db = get_db()
     request_data = request.get_json(force=True)
@@ -102,7 +102,7 @@ def do_client_login():
              'sub': user_info['id'],
              'exp': datetime.utcnow() + timedelta(days=10)
              },
-            secret, algorithm='HS256').decode('utf-8')
+            current_app.config["SECRET_KEY"], algorithm='HS256').decode('utf-8')
         return make_response(jsonify({
                                     'success': 1,
                                     'message': 'Successful login',
@@ -126,5 +126,5 @@ def do_driver_login():
         token = jwt.encode({
             'typ': 'driver', 'sub': user_info['id'],
             'exp': datetime.now()+timedelta(
-                days=10)}, secret, algorithm='HS256').decode('utf-8')
+                days=10)}, current_app.config["SECRET_KEY"], algorithm='HS256').decode('utf-8')
         return jsonify({'success': 1, 'message': 'Successful login', 'token': '{}'.format(token)})
