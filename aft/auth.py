@@ -3,6 +3,7 @@ from flask import Blueprint, make_response, request, jsonify, current_app
 import jwt
 from datetime import datetime, timedelta
 from aft.helpers import verify_token
+from pprint import pprint
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -25,8 +26,7 @@ def register_user(db_conn, user_details, user_type):
                 user_details["phone"], user_details["pwd"]
                 )
             elif user_type == 'transporter':
-                insert_query += "INSERT INTO transporter (email, username,"
-                " dl_number, full_name, phone, pwd) "
+                insert_query += "INSERT INTO transporter (email, username, dl_number, full_name, phone, pwd) "
                 insert_query += "VALUES ('{}', '{}', '{}', '{}', {}, '{}')".format(
                 user_details["email"], user_details["username"],
                 user_details["dl_number"],
@@ -88,7 +88,7 @@ def do_client_login():
 
     elif user_info['pwd'] == request_data['pwd'] and user_info['username'] == request_data['username']:
         token = jwt.encode(
-            {'typ': 'client',
+            {'typ': 'user',
              'sub': user_info['id'],
              'exp': datetime.utcnow() + timedelta(days=10)
              },
@@ -100,7 +100,7 @@ def do_client_login():
                                     }), 200)
 
 
-@bp.route('/login/driver', methods=['POST'])
+@bp.route('/login/transporter', methods=['POST'])
 def do_driver_login():
     db_conn = get_db()
     request_data = request.get_json(force=True)
@@ -112,9 +112,9 @@ def do_driver_login():
         return make_response(
             jsonify({'success': 0, 'message': 'User not found'}), 404
             )
-    elif user_info['pwd'] == request_data['pass'] and user_info['username'] == request_data['username']:
+    elif user_info['pwd'] == request_data['pwd'] and user_info['username'] == request_data['username']:
         token = jwt.encode({
-            'typ': 'driver', 'sub': user_info['id'],
+            'typ': 'transporter', 'sub': user_info['id'],
             'exp': datetime.now()+timedelta(
                 days=10)}, current_app.config["SECRET_KEY"], algorithm='HS256').decode('utf-8')
         return jsonify({'success': 1, 'message': 'Successful login', 'token': '{}'.format(token)})
