@@ -2,19 +2,9 @@ from aft.db import get_db
 from flask import Blueprint, make_response, request, jsonify, current_app
 import jwt
 from datetime import datetime, timedelta
+from aft.helpers import verify_token
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
-
-
-def verify_token(token, secret):
-        ''' whenever a user sends a request accompanied by the jwt
-            this function checks its validity by looking at the algorithm used and the expiry time of the token'''
-        try:
-                return jwt.decode(token, secret, algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-                return False
-        except jwt.InvalidAlgorithmError:
-                return False
 
 
 def register_user(db_conn, user_details, user_type):
