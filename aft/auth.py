@@ -117,4 +117,4 @@ def do_driver_login():
             'typ': 'transporter', 'sub': user_info['id'],
             'exp': datetime.now()+timedelta(
                 days=10)}, current_app.config["SECRET_KEY"], algorithm='HS256').decode('utf-8')
-        return jsonify({'success': 1, 'message': 'Successful login', 'token': '{}'.format(token)})
+        return jsonify({'success': 1, 'message': 'Successful login', 'token': '{}'.format(token)})       
