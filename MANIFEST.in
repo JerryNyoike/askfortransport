@@ -1,0 +1,2 @@
+include aft/schema.sql
+global-exclude *.pyc
