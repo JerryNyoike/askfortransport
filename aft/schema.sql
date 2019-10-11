@@ -36,3 +36,14 @@ CREATE TABLE vehicle(
     FOREIGN KEY(transporter_id) REFERENCES transporter(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE payment(
+	payment_id VARCHAR(100) UNIQUE NOT NULL,
+	trip_id VARCHAR(100) NOT NULL,
+	credit INT(100) NOT NULL,
+	debit INT(100) DEFAULT 0 NOT NULL,
+
+	PRIMARY KEY(payment_id),
+	FOREIGN KEY(trip_id) REFERENCES (trip.trip_id)
+   		ON UPDATE CASCADE ON DELETE CASCADE
+);
