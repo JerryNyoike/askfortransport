@@ -37,15 +37,9 @@ def debit():
         client = payload['sub']
         db_conn = get_db()
         cur = db_conn.cursor()
-
-        if make_payment(transporter, amount, client):
-            # write payment information to the database
-            pay_id = uuid4()
-
-            query = "INSERT INTO payment (payment_id, credit, debit) VALUES {}, {}, {} WHERE trip.user_id = {}".format(pay_id, 0, amount, payload['sub'])
-            cur.execute(query)
-            user_payments = cur.fetchall()
-
+        payment_response = make_payment(transporter, amount, client)
+        if not payment_response: 
+           return payment_response 
         else:
             return make_response({'status': 0, 'message': 'Unable to process payment.'})
 
