@@ -12,15 +12,26 @@ def get_vehicles(search_params=None):
     fetch_query = "SELECT vehicle.id, vehicle.vehicle_type, vehicle.capacity, vehicle.price, vehicle.number_plate, vehicle.pictures, vehicle.booked, transporter.email, transporter.full_name, transporter.phone FROM vehicle INNER JOIN transporter ON vehicle.transporter_id=transporter.id"
     #get any search parameters if any from the url
     #and include them in the SQL search query
-    if search_params is not None:
-        fetch_query += " WHERE "
-        params = search_params.split("&")
-        for i, param in enumerate(params):
-            key_value = param.split("=")
-            if i is not len(params) - 1:
-                fetch_query += key_value[0] + "=" + key_value[1] + " AND "
-            else:
-                fetch_query += key_value[0] + "=" + key_value[1]
+        if search_params is not None:
+                fetch_query += " WHERE "
+                params = search_params.split("&")
+                for i, param in enumerate(params):
+                        key_value = param.split("=")
+                        if key_value[0] is not None and key_value[1] is not None:
+                            if i is not len(params) - 1:
+                                if key_value[0] == "min_price":
+                                    fetch_query += "price > " + key_value[1] + " AND "
+                                elif key_value[0] == "max_price":
+                                    fetch_query += "price < " + key_value[1] + " AND "
+                                else:
+                                    fetch_query += key_value[0] + "='" + key_value[1] + "' AND "
+                            else:
+                                if key_value[0] == "min_price":
+                                    fetch_query += "price > " + key_value[1]
+                                elif key_value[0] == "max_price":
+                                    fetch_query += "price < " + key_value[1]
+                                else:
+                                    fetch_query += key_value[0] + "='" + key_value[1] + "'"
 
     cur.execute(fetch_query) 
     result = cur.fetchall()
