@@ -19,6 +19,8 @@ CREATE TABLE transporter(
     full_name VARCHAR(20) NOT NULL,
     phone INT(20) NOT NULL,
     pwd VARCHAR(50) NOT NULL,
+	aft_hero VARCHAR(10) DEFAULT 'no' NOT NULL,
+	hero_points INT(100) DEFAULT 0 NOT NULL
 
     PRIMARY KEY(id)
 );
@@ -53,11 +55,15 @@ CREATE TABLE trip(
 
 CREATE TABLE payment(
 	payment_id VARCHAR(100) UNIQUE NOT NULL,
-	trip_id VARCHAR(100) NOT NULL,
-	credit INT(100) NOT NULL,
-	debit INT(100) DEFAULT 0 NOT NULL,
+	amount INT(100) NOT NULL,
+	receipt_no VARCHAR(50) NOT NULL UNIQUE,
+	client_id INT(11) NOT NULL,
+	vehicle_id INT(11) NOT NULL,
+	payment_time DATETIME NOT NULL,
 
 	PRIMARY KEY(payment_id),
-	FOREIGN KEY(trip_id) REFERENCES trip(trip_id)
-   		ON UPDATE CASCADE ON DELETE CASCADE
+	FOREIGN KEY(client_id) REFERENCES user(id)
+   		ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(vehicle_id) REFERENCES vehicle(id)
+		ON UPDATE CASCADE ON DELETE CASCADE
 );
