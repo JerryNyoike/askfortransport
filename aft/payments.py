@@ -1,3 +1,5 @@
+from datetime import datetime
+import requests
 from uuid import uuid4
 from flask import Blueprint, request, make_response, jsonify, current_app
 from . import helpers
@@ -48,3 +50,29 @@ def debit():
             return make_response({'status': 0, 'message': 'Unable to process payment.'})
 
         return make_response({'status': 1, 'message': 'success', 'data': userpayments})
+
+
+def make_payment(transporter, amount, client):
+    access_token = current_app.config["TKN"]
+    api_url = current_app.config["LNM_URL"]
+    headers = "Authorization: Bearer {}".format(access_token)
+    pwd = b64encode((current_app.config["PASSKEY"]+current_app.config["SHORT_CODE"] + datetime.now().strftime("%Y%m%d%H%M%S")).encode("utf-8")).decode("utf-8")
+    payload = {
+            "BusinessShortCode": current_app.config["SHORT_CODE"],
+            "Password": pwd,
+            "Timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "TransactionType": "CustomerPaybillOnline",
+            "Amount": amount,
+            "PartyA": client,
+            "PartyB": "174379",
+            "PhoneNumber": client,
+            "CallBackURL": "http://ngrok.io/",
+            "AccountReference": current_app.config["ACC_REF"],
+            "TransactionDesc": " Transportation payment."
+            }
+    
+    response = requests.post(api_url, json = payload, headers = headers)
+    if not response['ResponseCode']:
+        return {"status": 1, "message": response["CustomerMessage"]
+    
+    return None
