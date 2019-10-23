@@ -32,12 +32,12 @@ def debit():
         return make_response({'status': 0, 'message': 'Must be logged in to make a payment.'}, 404)
     else:
         request_data = get_json()
-        transporter = request_data['transporter']
+        vehicle = request_data['vehicle_id']
         amount = request_data['amount']
         client = payload['sub']
         db_conn = get_db()
         cur = db_conn.cursor()
-        payment_response = make_payment(transporter, amount, client)
+        payment_response = make_payment(vehicle, amount, client)
         if not payment_response: 
            return payment_response 
         else:
@@ -45,6 +45,28 @@ def debit():
 
         return make_response({'status': 1, 'message': 'success', 'data': userpayments})
 
+
+@bp.route('/lnm_hook/<v_id>', methods=['POST'])
+def lnm_webhook(v_id):
+    payment_data = request.get_json()
+    if not payment_data['Body']['stkCallback']['ResultCode']:
+        # save payment details in the database
+        db_conn = get_db()
+        cur = db_conn.cursor()
+
+        pay_id = uuid4()
+        amount = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][0]["Value"]
+        receipt_no = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][1]["Value"]
+        payment_time = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][3]["Value"]
+        client_no = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][4]["Value"]
+
+        client_query = "SELECT id FROM user WHERE phone = {} LIMIT 1".format(client_no)
+        cur.execute(client_query)
+        client_id = cur.fetchone()
+
+        payment_query = "INSERT INTO payment (payment_id, amount, receipt_id, client_id, vehicle_id, payment_time) VALUES '{}', {}, '{}', {}{}, {}".format(pay_id, amount, receipt_no, client_id, v_id, payment_time)
+    
+    return redirect(url_for('failed_payment')
 
 def make_payment(transporter, amount, client):
     access_token = current_app.config["TKN"]
@@ -60,7 +82,7 @@ def make_payment(transporter, amount, client):
             "PartyA": client,
             "PartyB": "174379",
             "PhoneNumber": client,
-            "CallBackURL": "http://ngrok.io/",
+            "CallBackURL": ("http://ngrok.io/" + vehicle_id),
             "AccountReference": current_app.config["ACC_REF"],
             "TransactionDesc": " Transportation payment."
             }
