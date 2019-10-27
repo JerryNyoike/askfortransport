@@ -35,11 +35,13 @@ def debit():
         vehicle = request_data['vehicle_id']
         amount = request_data['amount']
         client = payload['sub']
+        
         db_conn = get_db()
         cur = db_conn.cursor()
         client_phone_query = "SELECT phone FROM user WHERE id = {} LIMIT 1".format(client_id)
         cur.execute(client_phone_query)
         client_phone = cur.fetchone() 
+
         payment_response = make_payment(vehicle, amount, client_phone)
         if not payment_response: 
            return payment_response 
@@ -63,12 +65,13 @@ def lnm_webhook(v_id):
         payment_time = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][3]["Value"]
         client_no = payment_data["Body"]["stkCallback"]["CallbackMetadata"]["Item"][4]["Value"]
 
-        client_query = "SELECT id FROM user WHERE phone = {} LIMIT 1".format(client_no)
-        cur.execute(client_query)
+        client_query = "SELECT id FROM user WHERE phone = {} LIMIT 1".format(client_no) 
+        cur.execute(client_query) 
         client_id = cur.fetchone()
 
-        payment_query = "INSERT INTO payment (payment_id, amount, receipt_id, client_id, vehicle_id, payment_time) VALUES '{}', {}, '{}', {}{}, {}".format(pay_id, amount, receipt_no, client_id, v_id, payment_time)
-    
+        payment_query = "INSERT INTO payment (payment_id, amount, receipt_id, client_id, vehicle_id, payment_time) VALUES '{}', {}, '{}', {}{}, {}".format(pay_id, amount, receipt_no, client_id, v_id, payment_time) 
+        cur.execute(payment_query)
+        cur.commit()
     return redirect(url_for('failed_payment')
 
 
