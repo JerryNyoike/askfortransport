@@ -68,10 +68,37 @@ def lnm_webhook(v_id):
     
     return redirect(url_for('failed_payment')
 
+
+def disburse_payment(transporter_no):
+    if transporter_no is not None:
+        api_token = current_app.config["TKN"]
+        api_url = current_app.config["B2C_URL"]
+        headers = {"Authorization": "Bearer {}".format(api_token)}
+        payload = {
+            "InitiatorName": "",
+            "SecurityCredential": "",
+            "CommandID": "",
+            "Amount": "",
+            "PartyA": "",
+            "PartyB": "",
+            "Remarks": "",
+            "QueueTimeoutURL": "",
+            "ResultURL": "",
+            "Occassion": ""
+            }
+
+        response = requests.post(api_url, json=payload, headers = header)
+        if response['ResponseCode'] == 0:
+            return {"status": 0, "message": response['ResponseDescription']}
+
+        return {"status": 1, "message": response['ResponseDescription']}
+
+    return {"status": 1, "message": "Transporter's number cannot be blank."}
+
 def make_payment(transporter, amount, client):
     access_token = current_app.config["TKN"]
     api_url = current_app.config["LNM_URL"]
-    headers = "Authorization: Bearer {}".format(access_token)
+    header = "Authorization: Bearer {}".format(access_token)
     pwd = b64encode((current_app.config["PASSKEY"]+current_app.config["SHORT_CODE"] + datetime.now().strftime("%Y%m%d%H%M%S")).encode("utf-8")).decode("utf-8")
     payload = {
             "BusinessShortCode": current_app.config["SHORT_CODE"],
@@ -87,7 +114,7 @@ def make_payment(transporter, amount, client):
             "TransactionDesc": " Transportation payment."
             }
     
-    response = requests.post(api_url, json = payload, headers = headers)
+    response = requests.post(api_url, json = payload, headers = header)
     if not response['ResponseCode']:
         return {"status": 1, "message": response["CustomerMessage"]
     
