@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, make_response, current_app
+from flask import Blueprint, jsonify, request, make_response, current_app
 from aft.db import get_db
+from aft.helpers import verify_token
 
 bp = Blueprint('vehicle', __name__, url_prefix='/vehicle')
 
@@ -161,7 +162,7 @@ def upload_image(vehicle_id):
         return make_response(jsonify({"success": 0, "message": "no files uploaded"}), 400)
     elif body["image"] and allowed_file(body["filename"]):
         filename = secure_filename(body["filename"])
-        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(token["sub"]), body["filename"])
+        path = os.path.join(current_app.config['IMAGE_STORE_PATH'], str(token["sub"]), body["filename"])
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
 
