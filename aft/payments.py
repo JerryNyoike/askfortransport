@@ -37,7 +37,10 @@ def debit():
         client = payload['sub']
         db_conn = get_db()
         cur = db_conn.cursor()
-        payment_response = make_payment(vehicle, amount, client)
+        client_phone_query = "SELECT phone FROM user WHERE id = {} LIMIT 1".format(client_id)
+        cur.execute(client_phone_query)
+        client_phone = cur.fetchone() 
+        payment_response = make_payment(vehicle, amount, client_phone)
         if not payment_response: 
            return payment_response 
         else:
