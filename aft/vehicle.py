@@ -174,3 +174,24 @@ def upload_image(vehicle_id):
         cur.execute("UPDATE vehicle SET pictures = %s WHERE id = %s", (path, vehicle_id))
         db_conn.commit()
         return make_response(jsonify({"success": 1, "message":"Successfully uploaded image"}), 200)
+
+@bp.route("/bookings", methods=['POST'])
+def get_bookings():
+    cur = get_db().cursor()
+
+    #get token and check token validity     
+    token = verify_token(request.headers['Authorization'].split(" ")[1], current_app.config['SECRET_KEY']) 
+
+    if not token:
+        return make_response(jsonify({"success": 0, "message": "Client doesn't exist"}), 404)
+    elif token["typ"] != "client":
+        return make_response(jsonify({"success": 0, "message": "You need to be logged in as a client to view bookings"}), 400)
+
+    fetch_query = "SELECT vehicle.id, vehicle.vehicle_type, vehicle.capacity, vehicle.price, vehicle.number_plate, vehicle.pictures, vehicle.booked, payments.email, payments.full_name, payments.phone FROM vehicle LEFT JOIN payments ON vehicle.vehicle_id=payments.vehicle_id WHERE vehicle.booked = %s" % token["sub"]
+
+    cur.execute(fetch_query) 
+    result = cur.fetchall()
+    if not result:
+        return make_response(jsonify({'success': 0, 'message': 'No vehicles found'}), 404)
+    else:
+        return make_response(jsonify({'success': 1, 'message': "Vehicles found", 'vehicles': result}), 200)
