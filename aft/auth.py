@@ -93,9 +93,12 @@ def do_client_login():
              'exp': datetime.utcnow() + timedelta(days=10)
              },
             current_app.config["SECRET_KEY"], algorithm='HS256').decode('utf-8')
+
+        del user_info["pwd"]
         return make_response(jsonify({
                                     'success': 1,
                                     'message': 'Successful login',
+                                    'user_details': user_info,
                                     'token': '{}'.format(token)
                                     }), 200)
 
