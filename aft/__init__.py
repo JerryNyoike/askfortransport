@@ -12,7 +12,7 @@ def create_app(test_config=None):
         IMAGE_STORE_PATH='static',
         DB_HOST='localhost',
         DB_USER='root',
-        DB_PASS='rootlikesmysql-db',
+        DB_PASS='',
         DB='askfortransport',
         CURSOR=pymysql.cursors.DictCursor
     )
