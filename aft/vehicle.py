@@ -4,8 +4,8 @@ from aft.db import get_db
 bp = Blueprint('vehicle', __name__, url_prefix='/vehicle')
 
 
-@bp.route("/vehicles", methods=['POST'])
-@bp.route("/vehicles/<search_params>", methods=['POST'])
+@bp.route("/", methods=['POST'])
+@bp.route("/<search_params>", methods=['POST'])
 def get_vehicles(search_params=None):
     cur = get_db().cursor()
 
@@ -17,21 +17,27 @@ def get_vehicles(search_params=None):
             params = search_params.split("&")
             for i, param in enumerate(params):
                     key_value = param.split("=")
-                    if key_value[0] is not None and key_value[1] is not None:
+                    if key_value[1] != "":
                         if i is not len(params) - 1:
-                            if key_value[0] == "min_price":
-                                fetch_query += "price > " + key_value[1] + " AND "
+                            if key_value[0] == "capacity":
+                                fetch_query += "vehicle.capacity" + "<='" + key_value[1] + "' AND "
+                            elif key_value[0] == "min_price":
+                                fetch_query += "vehicle.price >= " + key_value[1] + " AND "
                             elif key_value[0] == "max_price":
-                                fetch_query += "price < " + key_value[1] + " AND "
+                                fetch_query += "vehicle.price <= " + key_value[1] + " AND "
                             else:
                                 fetch_query += key_value[0] + "='" + key_value[1] + "' AND "
                         else:
+                            if key_value[0] == "capacity":
+                                fetch_query += "vehicle.capacity" + "<='" + key_value[1] + "' AND "
                             if key_value[0] == "min_price":
-                                fetch_query += "price > " + key_value[1]
+                                fetch_query += "vehicle.price >= " + key_value[1]
                             elif key_value[0] == "max_price":
-                                fetch_query += "price < " + key_value[1]
+                                fetch_query += "vehicle.price <= " + key_value[1]
                             else:
                                 fetch_query += key_value[0] + "='" + key_value[1] + "'"
+
+    print(fetch_query)
 
     cur.execute(fetch_query) 
     result = cur.fetchall()
