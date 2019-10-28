@@ -1,12 +1,13 @@
 from flask import Blueprint, jsonify, make_response, current_app, request
 from aft.helpers import verify_token
 from aft.db import get_db
+from aft.helpers import verify_token
 
 bp = Blueprint('vehicle', __name__, url_prefix='/vehicle')
 
 
-@bp.route("/vehicles", methods=['POST'])
-@bp.route("/vehicles/<search_params>", methods=['POST'])
+@bp.route("/", methods=['POST'])
+@bp.route("/<search_params>", methods=['POST'])
 def get_vehicles(search_params=None):
     cur = get_db().cursor()
 
@@ -14,14 +15,25 @@ def get_vehicles(search_params=None):
     #get any search parameters if any from the url
     #and include them in the SQL search query
     if search_params is not None:
-        fetch_query += " WHERE "
-        params = search_params.split("&")
-        for i, param in enumerate(params):
-            key_value = param.split("=")
-            if i is not len(params) - 1:
-                fetch_query += key_value[0] + "=" + key_value[1] + " AND "
-            else:
-                fetch_query += key_value[0] + "=" + key_value[1]
+            fetch_query += " WHERE "
+            params = search_params.split("&")
+            for i, param in enumerate(params):
+                    key_value = param.split("=")
+                    if key_value[0] is not None and key_value[1] is not None:
+                        if i is not len(params) - 1:
+                            if key_value[0] == "min_price":
+                                fetch_query += "price > " + key_value[1] + " AND "
+                            elif key_value[0] == "max_price":
+                                fetch_query += "price < " + key_value[1] + " AND "
+                            else:
+                                fetch_query += key_value[0] + "='" + key_value[1] + "' AND "
+                        else:
+                            if key_value[0] == "min_price":
+                                fetch_query += "price > " + key_value[1]
+                            elif key_value[0] == "max_price":
+                                fetch_query += "price < " + key_value[1]
+                            else:
+                                fetch_query += key_value[0] + "='" + key_value[1] + "'"
 
     cur.execute(fetch_query) 
     result = cur.fetchall()
@@ -145,7 +157,7 @@ def upload_image(vehicle_id):
         return make_response(jsonify({"success": 0, "message": "no files uploaded"}), 400)
     elif body["image"] and allowed_file(body["filename"]):
         filename = secure_filename(body["filename"])
-        path = os.path.join(app.config['IMAGE_STORE_PATH'], str(token["sub"]), body["filename"])
+        path = os.path.join(current_app.config['IMAGE_STORE_PATH'], str(token["sub"]), body["filename"])
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
 
