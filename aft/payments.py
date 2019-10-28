@@ -54,7 +54,7 @@ def debit():
             return make_response({'status': 0, 'message': payment_response})
 
 
-@bp.route('/lnm_hook/<v_id>/<transporter_id>', methods=['POST'])
+@bp.route('/lnmhook/<v_id>/<transporter_id>', methods=['POST'])
 def lnm_webhook(v_id, transporter_id):
     payment_data = request.get_json()
     if not payment_data['Body']['stkCallback']['ResultCode']:
@@ -114,17 +114,19 @@ def make_payment(vehicle, amount, client, transporter):
     access_token = current_app.config["TKN"]
     api_url = current_app.config["LNM_URL"]
     header = {"Authorization": "Bearer {}".format(access_token)}
-    pwd = b64encode((current_app.config["PASSKEY"]+current_app.config["SHORT_CODE"] + datetime.now().strftime("%Y%m%d%H%M%S")).encode("utf-8")).decode("utf-8")
+    time = datetime.now().strftime("%Y%m%d%H%M%S")
+    pwd = b64encode((current_app.config["LNM_SHORT_CODE"]+current_app.config["PASSKEY"]+time).encode("utf-8")).decode("utf-8")
+
     payload = {
             "BusinessShortCode": current_app.config["LNM_SHORT_CODE"],
             "Password": pwd,
-            "Timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "Timestamp": time,
             "TransactionType": "CustomerPayBillOnline",
             "Amount": amount,
-            "PartyA": "0{}".format(client["phone"]),
+            "PartyA": "254{}".format(client["phone"]),
             "PartyB": "174379",
-            "PhoneNumber": "0{}".format(client["phone"]),
-            "CallBackURL": (current_app.config["CALLBACK_URL"].format(vehicle, transporter)),
+            "PhoneNumber": "254{}".format(client["phone"]),
+            "CallBackURL": current_app.config["CALLBACK_URL"].format(vehicle, transporter["transporter_id"]),
             "AccountReference": current_app.config["ACC_REF"],
             "TransactionDesc": " Transportation payment."
             }
@@ -133,12 +135,12 @@ def make_payment(vehicle, amount, client, transporter):
     response = requests.post(api_url, json = payload, headers = header)
     response_body = response.json()
     print(response_body)
-    if response_body['errorCode']:
-        return {"status": 0, "message": response.json()['errorMessage']}
+    if 'errorCode' in response_body:
+        return {"status": 0, "message": response.json()}
     
-    if not response_body['ResponseCode']:
+    if 'ResponseCode' in response_body:
         return {"status": 1, "message": response.json()["CustomerMessage"]}
 
-    return {"status": 0, "message": response.json()["CustomerMessage"]}
+    return {"status": 0, "message": "Unable to process payment"}
     
     
