@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, make_response, current_app
+from flask import Blueprint, jsonify, make_response, current_app, request
+from aft.helpers import verify_token
 from aft.db import get_db
 
 bp = Blueprint('vehicle', __name__, url_prefix='/vehicle')
@@ -41,7 +42,7 @@ def register_vehicle():
 
     if not token:
         return make_response(jsonify({"success": 0, "message": "Driver doesn't exist"}), 404)
-    if token["typ"] != "driver":
+    if token["typ"] != "transporter":
         return make_response(jsonify({"success": 0, "message": "You need to be logged in as a driver to register a vehicle"}), 400)
 
     insert_query = "INSERT INTO vehicle (vehicle_type, capacity, price, number_plate, pictures, transporter_id, booked) VALUES "
@@ -70,7 +71,7 @@ def book_vehicle(v_id):
 
     if not token:
         return make_response(jsonify({"success": 0, "message": "Client doesn't exist"}), 404)
-    elif token['typ'] != 'client':
+    elif token['typ'] != 'user':
         return make_response(jsonify({"success": 0, "message": "You must have logged in with a client account to book a vehicle."}))
 
     # check that vehicle exists
