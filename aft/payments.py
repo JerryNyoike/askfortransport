@@ -44,14 +44,14 @@ def debit():
 
         transporter_query = "SELECT transporter_id FROM vehicle WHERE id = {}".format(vehicle)
         cur.execute(transporter_query)
-        cur.commit()
+        db_conn.commit()
         transporter = cur.fetchone()
 
         payment_response = make_payment(vehicle, amount, client_phone, transporter)
         if not payment_response: 
            return make_response({'status': 1, 'message': 'success', 'data': payment_response})
         else:
-            return make_response({'status': 0, 'message': 'Unable to process payment.'})
+            return make_response({'status': 0, 'message': payment_response})
 
 
 @bp.route('/lnm_hook/<v_id>/<transporter_id>', methods=['POST'])
@@ -70,12 +70,12 @@ def lnm_webhook(v_id, transporter_id):
 
         client_query = "SELECT id FROM user WHERE phone = {} LIMIT 1".format(client_no) 
         cur.execute(client_query) 
-        cur.commit()
+        db_conn.commit()
         client_id = cur.fetchone()
 
         payment_query = "INSERT INTO payment (payment_id, amount, receipt_id, client_id, vehicle_id, payment_time) VALUES '{}', {}, '{}', {}, {}, {}".format(pay_id, amount, receipt_no, client_id, v_id, payment_time) 
         cur.execute(payment_query)
-        cur.commit()
+        db_conn.commit()
 
         #transporter_phone_query = "SELECT phone FROM transporter WHERE id = {}".format(transporter_id)
         #cur.execute(transporter_phone_query)
@@ -104,33 +104,41 @@ def disburse_payment(transporter_no):
 
         response = requests.post(api_url, json=payload, headers = header)
         if response['ResponseCode'] == 0:
-            return {"status": 0, "message": response['ResponseDescription']}
+            return {"status": 1, "message": response['ResponseDescription']}
 
-        return {"status": 1, "message": response['ResponseDescription']}
+        return {"status": 0, "message": response['ResponseDescription']}
 
-    return {"status": 1, "message": "Transporter's number cannot be blank."}
+    return {"status": 0, "message": "Transporter's number cannot be blank."}
 
 def make_payment(vehicle, amount, client, transporter):
     access_token = current_app.config["TKN"]
     api_url = current_app.config["LNM_URL"]
-    header = "Authorization: Bearer {}".format(access_token)
+    header = {"Authorization": "Bearer {}".format(access_token)}
     pwd = b64encode((current_app.config["PASSKEY"]+current_app.config["SHORT_CODE"] + datetime.now().strftime("%Y%m%d%H%M%S")).encode("utf-8")).decode("utf-8")
     payload = {
-            "BusinessShortCode": current_app.config["SHORT_CODE"],
+            "BusinessShortCode": current_app.config["LNM_SHORT_CODE"],
             "Password": pwd,
             "Timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
-            "TransactionType": "CustomerPaybillOnline",
+            "TransactionType": "CustomerPayBillOnline",
             "Amount": amount,
-            "PartyA": client,
+            "PartyA": "0{}".format(client["phone"]),
             "PartyB": "174379",
-            "PhoneNumber": client,
-            "CallBackURL": ("http://b3b77426.ngrok.io/payment/lnm_hook/{}/{}".format(vehicle, transporter)),
+            "PhoneNumber": "0{}".format(client["phone"]),
+            "CallBackURL": (current_app.config["CALLBACK_URL"].format(vehicle, transporter)),
             "AccountReference": current_app.config["ACC_REF"],
             "TransactionDesc": " Transportation payment."
             }
-    
+
+
     response = requests.post(api_url, json = payload, headers = header)
-    if not response['ResponseCode']:
-        return {"status": 1, "message": response["CustomerMessage"]}
+    response_body = response.json()
+    print(response_body)
+    if response_body['errorCode']:
+        return {"status": 0, "message": response.json()['errorMessage']}
     
-    return None
+    if not response_body['ResponseCode']:
+        return {"status": 1, "message": response.json()["CustomerMessage"]}
+
+    return {"status": 0, "message": response.json()["CustomerMessage"]}
+    
+    
