@@ -18,8 +18,7 @@ def get_user_payments():
         db_conn = get_db()
         cur = db_conn.cursor()
 
-        query = "SELECT * FROM payment LEFT JOIN ON payment.trip_id = trip.trip_id "
-        query += "WHERE trip.user_id = {}".format(payload['sub'])
+        query = "SELECT * FROM payment WHERE client_id = {}".format(payload['sub'])
         cur.execute(query)
         user_payments = cur.fetchall()
 
