@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS payment;
+DROP TABLE IF EXISTS trip;
 DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS vehicle;
 DROP TABLE IF EXISTS transporter;
@@ -20,16 +22,17 @@ CREATE TABLE transporter(
     phone INT(20) NOT NULL,
     pwd VARCHAR(50) NOT NULL,
 	aft_hero VARCHAR(10) DEFAULT 'no' NOT NULL,
-	hero_points INT(100) DEFAULT 0 NOT NULL
+	hero_points INT(100) DEFAULT 0 NOT NULL,
 
     PRIMARY KEY(id)
 );
 
 CREATE TABLE vehicle(
     id INT(11) NOT NULL AUTO_INCREMENT,
+	vehicle_type VARCHAR(100) NOT NULL,
     capacity INT(11) NOT NULL,
     price INT(11) NOT NULL,
-    number_plate INT(11) NOT NULL,
+    number_plate VARCHAR(11) NOT NULL,
     pictures VARCHAR(100) NOT NULL DEFAULT 'No images',
     transporter_id INT(11) NOT NULL,
     booked VARCHAR(10) NOT NULL DEFAULT 'no',
