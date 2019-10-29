@@ -38,8 +38,6 @@ def get_vehicles(search_params=None):
                             else:
                                 fetch_query += key_value[0] + "='" + key_value[1] + "'"
 
-    print(fetch_query)
-
     cur.execute(fetch_query) 
     result = cur.fetchall()
     if not result:
@@ -88,8 +86,8 @@ def book_vehicle(v_id):
 
     if not token:
         return make_response(jsonify({"success": 0, "message": "Client doesn't exist"}), 404)
-    elif token['typ'] != 'client':
-        return make_response(jsonify({"success": 0, "message": "You must have logged in with a client account to book a vehicle."}))
+    elif token['typ'] != 'user':
+        return make_response(jsonify({"success": 0, "message": "You must have logged in with a client account to book a vehicle."}), 400)
 
     # check that vehicle exists
     cur.execute("SELECT * FROM vehicle WHERE id = {}".format(v_id))
@@ -184,10 +182,10 @@ def get_bookings():
 
     if not token:
         return make_response(jsonify({"success": 0, "message": "Client doesn't exist"}), 404)
-    elif token["typ"] != "client":
+    elif token["typ"] != "user":
         return make_response(jsonify({"success": 0, "message": "You need to be logged in as a client to view bookings"}), 400)
 
-    fetch_query = "SELECT vehicle.id, vehicle.vehicle_type, vehicle.capacity, vehicle.price, vehicle.number_plate, vehicle.pictures, vehicle.booked, payments.email, payments.full_name, payments.phone FROM vehicle LEFT JOIN payments ON vehicle.vehicle_id=payments.vehicle_id WHERE vehicle.booked = %s" % token["sub"]
+    fetch_query = "SELECT vehicle.id, vehicle.vehicle_type, vehicle.capacity, vehicle.price, vehicle.number_plate, vehicle.pictures, vehicle.booked, payment.payment_id, payment.amount, payment.receipt_no, payment.client_id, payment.vehicle_id, payment.payment_time FROM vehicle LEFT JOIN payment ON vehicle.id=payment.vehicle_id WHERE vehicle.booked = %s" % token["sub"]
 
     cur.execute(fetch_query) 
     result = cur.fetchall()
