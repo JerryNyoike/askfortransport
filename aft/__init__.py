@@ -14,13 +14,21 @@ def create_app(test_config=None):
         DB_USER='root',
         DB_PASS='rootlikesmysql-db',
         DB='askfortransport',
-        CURSOR=pymysql.cursors.DictCursor
+        CURSOR=pymysql.cursors.DictCursor,
+        CONSUMER_KEY = "35knXduhzqI4XdQFWMvdnDi6dTVQ9ret",
+        CONSUMER_SECRET = "ZBAMy6p24luLJPSG",
+        PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",
+        ACC_REF = "AskForTransport",
+        TKN = "GeTSMlyyykeFs27OTV7wDtbGBB1Q",
+        LNM_URL = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        B2C_URL = "https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+        CALLBACK_URL = "http://0dfe3bc0.ngrok.io/payment/lnmhook/{}/{}",
+        RESULT_URL = "/payment/disbursement/hook/<v_id>/<transporter_id>",
+        QUEUETIMEOUT_URL = "/payment/queuetimeout",
+        SHORT_CODE = "600284",
+        LNM_SHORT_CODE = "174379"
     )
     CORS(app)
-    if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        app.config.from_mapping(test_config)
 
     try:
         os.makedirs(app.instance_path)
