@@ -2,7 +2,7 @@ import os
 import pymysql.cursors
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
-from . import db, auth, vehicle, transporter, location
+from . import db, auth, vehicle, transporter, payments, location
 
 
 def create_app(test_config=None):
@@ -18,8 +18,7 @@ def create_app(test_config=None):
     )
     CORS(app)
     if test_config is None:
-        pass
-        # app.config.from_mapping('config.py', silent=True)
+        app.config.from_pyfile('config.py', silent=True)
     else:
         app.config.from_mapping(test_config)
 
@@ -32,6 +31,7 @@ def create_app(test_config=None):
     app.register_blueprint(auth.bp)
     app.register_blueprint(vehicle.bp)
     app.register_blueprint(transporter.bp)
+    app.register_blueprint(payments.bp)
     app.register_blueprint(location.bp)
 
     return app

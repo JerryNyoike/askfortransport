@@ -20,18 +20,17 @@ def register_user(db_conn, user_details, user_type):
             # proceed to insert details of the new user
             insert_query = ''
             if user_type == 'user':
-                insert_query += "INSERT INTO user (email, username, phone, pwd) "
-                insert_query += "VALUES ('{}', '{}', {}, '{}');".format(
-                user_details["email"], user_details["username"],
+                insert_query += "INSERT INTO user (email, username, city, region, phone, pwd) "
+                insert_query += "VALUES ('{}', '{}', '{}', '{}', {}, '{}');".format(
+                user_details["email"], user_details["username"], user_details["city"], user_details["region"],
                 user_details["phone"], user_details["pwd"]
                 )
             elif user_type == 'transporter':
-                insert_query += "INSERT INTO transporter (email, username, dl_number, full_name, phone, pwd) "
+                insert_query += "INSERT INTO transporter (email, username, dl_number, full_name, city, region, phone, pwd) "
                 insert_query += "VALUES ('{}', '{}', '{}', '{}', {}, '{}')".format(
-                user_details["email"], user_details["username"],
-                user_details["dl_number"],
-                user_details["full_name"], user_details["phone"],
-                user_details["pwd"]
+                user_details["email"], user_details["username"], user_details["dl_number"], 
+                user_details["full_name"], user_details["city"], user_details["region"],
+                user_details["phone"], user_details["pwd"]
                 )
             cur.execute(insert_query)
             db_conn.commit()
@@ -44,8 +43,7 @@ def register_user(db_conn, user_details, user_type):
         elif user_details["email"] == result["email"]:
             return {'success': 0, 'message': 'Email already exists'}, 409
         elif user_details["username"] == result["username"]:
-            return {'success': 0, 'message': 'Username already exists'},
-            409
+            return {'success': 0, 'message': 'Username already exists'}, 409
 
 def fetch_user(db_conn, username, password, user_type):
     user = None

@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS payment;
+DROP TABLE IF EXISTS trip;
 DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS vehicle;
 DROP TABLE IF EXISTS transporter;
@@ -19,15 +21,18 @@ CREATE TABLE transporter(
     full_name VARCHAR(20) NOT NULL,
     phone INT(20) NOT NULL,
     pwd VARCHAR(50) NOT NULL,
+	aft_hero VARCHAR(10) DEFAULT 'no' NOT NULL,
+	hero_points INT(100) DEFAULT 0 NOT NULL,
 
     PRIMARY KEY(id)
 );
 
 CREATE TABLE vehicle(
     id INT(11) NOT NULL AUTO_INCREMENT,
+	vehicle_type VARCHAR(100) NOT NULL,
     capacity INT(11) NOT NULL,
     price INT(11) NOT NULL,
-    number_plate INT(11) NOT NULL,
+    number_plate VARCHAR(11) NOT NULL,
     pictures VARCHAR(100) NOT NULL DEFAULT 'No images',
     transporter_id INT(11) NOT NULL,
     booked VARCHAR(10) NOT NULL DEFAULT 'no',
@@ -35,4 +40,33 @@ CREATE TABLE vehicle(
     PRIMARY KEY(id),
     FOREIGN KEY(transporter_id) REFERENCES transporter(id)
         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE trip(
+	trip_id VARCHAR(100) NOT NULL UNIQUE,
+	user_id INT(11) NOT NULL,
+	transporter_id INT(11) NOT NULL,
+	start DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	end DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+	PRIMARY KEY(trip_id),
+	FOREIGN KEY(user_id) REFERENCES user(id)
+		ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(transporter_id) REFERENCES transporter(id)
+		ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE payment(
+	payment_id VARCHAR(100) UNIQUE NOT NULL,
+	amount INT(100) NOT NULL,
+	receipt_no VARCHAR(50) NOT NULL UNIQUE,
+	client_id INT(11) NOT NULL,
+	vehicle_id INT(11) NOT NULL,
+	payment_time DATETIME NOT NULL,
+
+	PRIMARY KEY(payment_id),
+	FOREIGN KEY(client_id) REFERENCES user(id)
+   		ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(vehicle_id) REFERENCES vehicle(id)
+		ON UPDATE CASCADE ON DELETE CASCADE
 );
